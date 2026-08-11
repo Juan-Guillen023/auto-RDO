@@ -11,7 +11,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/genai": "^2.16.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "pdfkit": "^0.18.0",
     "pdfkit-table": "^0.2.11"

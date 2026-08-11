@@ -1,4 +1,5 @@
 const ActivityRenderer = require('./ActivityRenderer');
+const { htmlEstaVazio } = require('../../utils/richText');
 
 /**
  * Renderiza o bloco de um dia completo: cabeçalho do dia + suas atividades.
@@ -27,7 +28,7 @@ class DayRenderer {
 
   _resolveActivities(dia) {
     const filtered = dia.atividades.filter(
-      (ativ) => ativ.texto.trim() !== '' || ativ.imagens.length > 0
+      (ativ) => !htmlEstaVazio(ativ.texto) || ativ.imagens.length > 0
     );
     return filtered.length > 0 ? filtered : [{ texto: 'Sem relatos.', imagens: [] }];
   }

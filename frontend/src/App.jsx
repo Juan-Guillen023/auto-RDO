@@ -2,10 +2,12 @@ import InputDinamico from './components/InputDinamico';
 import DiaBox from './components/DiaBox';
 import DraftBanner from './components/DraftBanner';
 import SaveBar from './components/SaveBar';
+import EmailModal from './components/EmailModal';
 import { useRdoForm } from './hooks/useRdoForm';
 import { useDraftPersistence } from './hooks/useDraftPersistence';
-import { gerarRdoPdf, baixarBlob } from './services/rdoService';
+import { gerarRdoPdf, baixarBlob, gerarEmailRdo } from './services/rdoService';
 import { mascaraData } from './utils/mascaras';
+import { validarAtividades } from './utils/diasUtils';
 import styles from './App.module.css';
 import { useState } from 'react';
 
@@ -37,6 +39,9 @@ function App() {
 
   const [carregando, setCarregando] = useState(false);
   const [erroSubmit, setErroSubmit] = useState(null);
+  const [gerandoEmail, setGerandoEmail] = useState(false);
+  const [erroEmail, setErroEmail] = useState(null);
+  const [emailGerado, setEmailGerado] = useState(null);
 
   // Orquestração de rascunho: App coordena os dois hooks sem que eles
   // se conheçam diretamente
@@ -54,6 +59,11 @@ function App() {
   // existe uma chamada HTTP nem um download
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const erroValidacao = validarAtividades(diasDados);
+    if (erroValidacao) {
+      setErroSubmit(erroValidacao);
+      return;
+    }
     setCarregando(true);
     setErroSubmit(null);
     try {
@@ -64,6 +74,20 @@ function App() {
       setErroSubmit('Erro ao gerar o PDF. Verifique o servidor.');
     } finally {
       setCarregando(false);
+    }
+  };
+
+  const handleGerarEmail = async () => {
+    setGerandoEmail(true);
+    setErroEmail(null);
+    try {
+      const payload = { ...campos, dias: diasDados, tipoLayout: 'residencial' };
+      const email = await gerarEmailRdo(payload);
+      setEmailGerado(email);
+    } catch {
+      setErroEmail('Erro ao gerar o email. Verifique o servidor.');
+    } finally {
+      setGerandoEmail(false);
     }
   };
 
@@ -109,7 +133,9 @@ function App() {
           </div>
         </div>
 
-        {(erro || erroSubmit) && <p className={styles.erro}>{erro || erroSubmit}</p>}
+        {(erro || erroSubmit || erroEmail) && (
+          <p className={styles.erro}>{erro || erroSubmit || erroEmail}</p>
+        )}
 
         {diasDados.length > 0 && (
           <section className={styles.secaoDias}>
@@ -130,11 +156,26 @@ function App() {
           </section>
         )}
 
-        <button type="submit" className={styles.btnSubmit} disabled={carregando}>
-          {carregando ? 'Gerando PDF...' : 'Gerar PDF de todo o Período'}
-        </button>
+        <div className={styles.linhaBotoes}>
+          <button type="submit" className={styles.btnSubmit} disabled={carregando}>
+            {carregando ? 'Gerando PDF...' : 'Gerar PDF de todo o Período'}
+          </button>
+
+          <button
+            type="button"
+            className={styles.btnEmail}
+            disabled={gerandoEmail}
+            onClick={handleGerarEmail}
+          >
+            {gerandoEmail ? 'Gerando Email...' : '📧 Gerar Email Diário'}
+          </button>
+        </div>
 
       </form>
+
+      {emailGerado && (
+        <EmailModal email={emailGerado} onFechar={() => setEmailGerado(null)} />
+      )}
     </div>
   );
 }

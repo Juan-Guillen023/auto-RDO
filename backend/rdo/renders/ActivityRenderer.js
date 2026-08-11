@@ -1,4 +1,5 @@
 const ImageBlockRenderer = require('./ImageBlockRenderer');
+const { parseHtmlParaPdf, htmlEstaVazio } = require('../../utils/richText');
 
 class ActivityRenderer {
   constructor() {
@@ -34,6 +35,8 @@ class ActivityRenderer {
   }
 
   _printItemNumber(doc, ativ, index, margin, startY, vertLineX) {
+    // 'Sem relatos.' só existe como texto puro (injetado pelo DayRenderer
+    // quando o dia não tem atividades reais), nunca vem do editor de texto rico.
     const isFiller = ativ.texto === 'Sem relatos.' && (!ativ.imagens || ativ.imagens.length === 0);
     if (!isFiller) {
       doc
@@ -55,10 +58,104 @@ class ActivityRenderer {
       doc.y += 4;
     }
 
-    doc.font('Helvetica').fontSize(10).fillColor('#000000').text(ativ.texto || 'Sem relatos.', { width: 445, align: 'left' });
+    this._printTextoFormatado(doc, ativ.texto, 445, config);
 
     doc.page.margins.left = originalLeftMargin;
     doc.x = config.margin;
+  }
+
+  _fonteParaRun(run) {
+    if (run.negrito && run.italico) return 'Helvetica-BoldOblique';
+    if (run.negrito) return 'Helvetica-Bold';
+    if (run.italico) return 'Helvetica-Oblique';
+    return 'Helvetica';
+  }
+
+  /**
+   * Renderiza o texto da atividade preservando negrito/itálico/sublinhado/
+   * tamanho de fonte aplicados no editor rico do frontend.
+   *
+   * O PDFKit encadeia linhas via `continued: true` calculando a altura da
+   * linha pelo tamanho da fonte da última chamada — quando os tamanhos
+   * variam muito numa mesma linha isso sobrepõe o texto. Por isso fazemos
+   * a quebra de linha manualmente aqui: quebra por palavra, usando a maior
+   * fonte de cada linha pra definir a altura dela.
+   */
+  _printTextoFormatado(doc, textoHtml, width, config) {
+    const paragrafos = parseHtmlParaPdf(textoHtml);
+
+    if (paragrafos.length === 0) {
+      doc.font('Helvetica').fontSize(10).fillColor('#000000').text('Sem relatos.', { width, align: 'left' });
+      return;
+    }
+
+    const xInicial = doc.x;
+    const fatorLinha = 1.25;
+
+    paragrafos.forEach((runs) => {
+      const palavras = [];
+      runs.forEach((run) => {
+        const fonte = this._fonteParaRun(run);
+        const tamanho = run.tamanho || 10;
+        // Mantém os espaços como tokens próprios pra preservar o espaçamento exato
+        run.texto.split(/(\s+)/).filter((parte) => parte !== '').forEach((parte) => {
+          palavras.push({ texto: parte, fonte, tamanho, sublinhado: run.sublinhado });
+        });
+      });
+
+      let linha = [];
+      let xAtual = xInicial;
+
+      const flushLinha = () => {
+        if (linha.length === 0) return;
+
+        const alturaLinha = Math.max(...linha.map((p) => p.tamanho)) * fatorLinha;
+        if (doc.y + alturaLinha > config.bottomEdge) {
+          doc.addPage();
+          doc.y = config.contentStartY + 8;
+        }
+
+        let x = xInicial;
+        const y = doc.y;
+        linha.forEach((p) => {
+          doc.font(p.fonte).fontSize(p.tamanho);
+          const larguraPalavra = doc.widthOfString(p.texto);
+          doc.fillColor('#000000').text(p.texto, x, y, { lineBreak: false });
+
+          // Desenha o sublinhado manualmente: passar `underline` pro .text() aqui
+          // depende do cálculo interno de largura de linha do PDFKit, que não
+          // roda com `lineBreak: false` e vira NaN.
+          if (p.sublinhado && p.texto.trim() !== '') {
+            const yLinha = y + doc.currentLineHeight() - 1;
+            doc.save().lineWidth(0.5).moveTo(x, yLinha).lineTo(x + larguraPalavra, yLinha).stroke().restore();
+          }
+
+          x += larguraPalavra;
+        });
+
+        doc.x = xInicial;
+        doc.y = y + alturaLinha;
+        linha = [];
+        xAtual = xInicial;
+      };
+
+      palavras.forEach((p) => {
+        doc.font(p.fonte).fontSize(p.tamanho);
+        const larguraPalavra = doc.widthOfString(p.texto);
+        const ehEspaco = /^\s+$/.test(p.texto);
+
+        if (xAtual + larguraPalavra > xInicial + width && linha.length > 0 && !ehEspaco) {
+          flushLinha();
+        }
+
+        linha.push(p);
+        xAtual += larguraPalavra;
+      });
+
+      flushLinha();
+    });
+
+    doc.x = xInicial;
   }
 
   /**

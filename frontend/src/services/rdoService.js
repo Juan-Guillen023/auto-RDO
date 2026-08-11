@@ -1,4 +1,7 @@
-const API_URL = 'https://auto-rdo.onrender.com/api/gerar-rdo';
+// VITE_API_URL permite apontar pra um backend local durante testes
+// (veja frontend/.env.local). Sem essa variável, usa a produção normalmente.
+const API_URL = import.meta.env.VITE_API_URL || 'https://auto-rdo.onrender.com/api/gerar-rdo';
+const EMAIL_API_URL = API_URL.replace('/gerar-rdo', '/gerar-email');
 
 /**
  * Envia os dados do formulário para a API e retorna o Blob do PDF gerado.
@@ -18,6 +21,26 @@ export async function gerarRdoPdf(payload) {
   }
 
   return response.blob();
+}
+
+/**
+ * Envia os dados do formulário para a API e retorna o email formatado (assunto e corpo, PT/EN).
+ * @param {object} payload
+ * @returns {Promise<{ subject: {pt: string, en: string}, body: {pt: string, en: string} }>}
+ * @throws {Error} se a resposta HTTP não for ok
+ */
+export async function gerarEmailRdo(payload) {
+  const response = await fetch(EMAIL_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha ao gerar o email (status ${response.status})`);
+  }
+
+  return response.json();
 }
 
 /**

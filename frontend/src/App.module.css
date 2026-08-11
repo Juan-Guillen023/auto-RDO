@@ -82,9 +82,15 @@
   margin-bottom: 16px;
 }
 
-/* Botão de submit */
-.btnSubmit {
+/* Botões de ação (submit + email) */
+.linhaBotoes {
+  display: flex;
+  gap: 12px;
   margin-top: 24px;
+}
+
+.btnSubmit {
+  flex: 1;
   padding: 14px 24px;
   background: #1d4ed8;
   color: #ffffff;
@@ -102,6 +108,29 @@
 }
 
 .btnSubmit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnEmail {
+  flex: 1;
+  padding: 14px 24px;
+  background: #ffffff;
+  color: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+
+.btnEmail:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.btnEmail:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

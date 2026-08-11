@@ -1,7 +1,15 @@
 import styles from './AtividadeCard.module.css';
+import RichTextEditor from './RichTextEditor';
+
+export const STATUS_ATIVIDADE = [
+  { valor: 'concluido', label: '🟢 Concluído' },
+  { valor: 'em_progresso', label: '🟡 Em progresso' },
+  { valor: 'pendente', label: '⚪ Pendente / Não iniciado' },
+  { valor: 'bloqueio', label: '🔴 Bloqueio / Ação necessária' },
+];
 
 /**
- * Renderiza um item de atividade: número, título, descrição e galeria de fotos.
+ * Renderiza um item de atividade: número, título, descrição, status e galeria de fotos.
  */
 function AtividadeCard({
   atividade,
@@ -34,14 +42,26 @@ function AtividadeCard({
 
           <div className={styles.campoGrupo}>
             <label className={styles.campoLabel}>Descrição Detalhada</label>
-            <textarea
-              className={styles.campoTextarea}
+            <RichTextEditor
               value={atividade.texto}
-              onChange={(e) => onAtividadeChange('texto', e.target.value)}
+              onChange={(html) => onAtividadeChange('texto', html)}
               placeholder="Descreva detalhadamente o que foi feito..."
-              rows={2}
-              required
             />
+          </div>
+
+          <div className={styles.campoGrupo}>
+            <label className={styles.campoLabel}>Status</label>
+            <select
+              className={styles.campoInput}
+              value={atividade.status || 'concluido'}
+              onChange={(e) => onAtividadeChange('status', e.target.value)}
+            >
+              {STATUS_ATIVIDADE.map((opcao) => (
+                <option key={opcao.valor} value={opcao.valor}>
+                  {opcao.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

@@ -1,0 +1,117 @@
+ADDITIONAL FORMAT RULES
+
+EMAIL SUBJECT
+
+Generate the subject using:
+
+[Customer] - [Unit / Vessel / Area] - PO [PO Number] - Emerson Daily Report and Activities Progress - [Discipline]
+
+Example:
+
+Cargill Bioenergia - Usina São Francisco - PO 2251537/1.1 - Emerson Daily Report and Activities Progress - Telemetry and Flow Measurement
+
+Generate English and Portuguese version for the subject.
+
+==================================================
+
+EMAIL BODY FORMAT
+
+Use EXACTLY the following structure:
+
+Bom dia,
+
+[blank line]
+
+Segue resumo executivo das atividades do projeto.
+
+[blank line]
+
+🟢 CONCLUÍDO
+
+• activity
+• activity
+
+[blank line]
+
+🟡 EM PROGRESSO
+
+• activity
+• activity
+
+[blank line]
+
+⚪ PENDENTE / NÃO INICIADO
+
+• activity
+• activity
+
+[blank line]
+
+🔴 BLOQUEIOS / AÇÕES NECESSÁRIAS
+
+• activity
+• activity
+
+[blank line]
+
+Obrigado,
+
+==================================================
+
+ENGLISH VERSION FORMAT
+
+Hi Team,
+
+[blank line]
+
+Below is the executive summary of project activities.
+
+[blank line]
+
+🟢 COMPLETED
+
+• activity
+• activity
+
+[blank line]
+
+🟡 IN PROGRESS
+
+• activity
+• activity
+
+[blank line]
+
+⚪ PENDING / NOT STARTED
+
+• activity
+• activity
+
+[blank line]
+
+🔴 BLOCKERS / REQUIRED ACTIONS
+
+• activity
+• activity
+
+[blank line]
+
+Thank you,
+
+==================================================
+
+FORMATTING RULES
+
+1. Place the emoji BEFORE the section title.
+2. Insert one blank line before and after every section title.
+3. Do not use colons after section titles.
+4. Do not use bold formatting.
+5. Do not use tables.
+6. Do not use numbered lists.
+7. Always leave a blank line before "Obrigado," and "Thank you,".
+8. If there are no blockers, remove the entire blocker section.
+9. Never add signatures.
+10. Never add names.
+11. Keep each bullet to a single line whenever possible.
+12. Use Outlook-friendly formatting.
+13. Output must look ready to send without any editing.

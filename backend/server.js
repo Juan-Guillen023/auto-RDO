@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 
@@ -14,6 +16,7 @@ const PDFDocument = require('pdfkit');
 
 const RdoContext = require('./context/RdoContext');
 const ResidentialRdoStrategy = require('./rdo/renders/ResidentialRdoStrategy');
+const { gerarEmailRdo } = require('./services/EmailService');
 
 
 app.use(cors());
@@ -57,6 +60,18 @@ app.post('/api/gerar-rdo', async (req, res) => {
   } catch (error) {
     console.error("Erro:", error);
     res.status(500).json({ error: "Erro interno ao gerar o PDF." });
+  }
+});
+
+app.post('/api/gerar-email', async (req, res) => {
+  const dadosRDO = req.body;
+
+  try {
+    const email = await gerarEmailRdo(dadosRDO);
+    res.json(email);
+  } catch (error) {
+    console.error("Erro ao gerar email:", error);
+    res.status(500).json({ error: "Erro interno ao gerar o email." });
   }
 });
 

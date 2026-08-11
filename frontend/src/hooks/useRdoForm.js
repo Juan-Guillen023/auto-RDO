@@ -22,7 +22,7 @@ export function useRdoForm() {
   const [erro, setErro] = useState(null);
 
   // Delega a geração de dias para o hook especializado (SRP)
-  useDateRange(campos.dataInicio, campos.dataFim, {
+  useDateRange(campos.dataInicio, campos.dataFim, diasDados, {
     onDiasGerados: (dias) => { setDiasDados(dias); setErro(null); },
     onErro: (msg) => setErro(msg),
   });
@@ -48,7 +48,7 @@ export function useRdoForm() {
     setDiasDados((prev) =>
       atualizarDia(prev, indexDia, (dia) => ({
         ...dia,
-        atividades: [...dia.atividades, { titulo: '', texto: '', imagens: [] }],
+        atividades: [...dia.atividades, { titulo: '', texto: '', status: 'concluido', imagens: [] }],
       }))
     );
   };

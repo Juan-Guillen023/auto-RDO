@@ -8,3 +8,9 @@ build/
 
 # Ignorar arquivos de log
 *.log
+# Variaveis de ambiente / segredos
+.env
+**/.env
+
+# Configuracoes locais do Claude Code (especificas da maquina)
+.claude/settings.local.json
