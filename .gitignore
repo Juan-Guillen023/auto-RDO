@@ -17,3 +17,6 @@ build/
 
 # Relatórios de teste gerados pela pipeline (Jenkins)
 test-results/
+
+# Pacote da versão offline (scripts/empacotar-offline.ps1)
+offline-dist/

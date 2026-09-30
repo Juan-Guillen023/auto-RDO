@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabaseConfigurado } from '../services/supabaseClient';
+import { MODO_OFFLINE, USUARIO_LOCAL } from '../config/modo';
 import { sair } from '../services/authService';
 import { useAuth } from '../hooks/useAuth';
 import { UsuarioContext } from '../contexts/UsuarioContext';
@@ -11,6 +12,18 @@ import styles from './AuthGate.module.css';
  * saber que existe autenticação (responsabilidade única).
  */
 function AuthGate({ children }) {
+  // Offline não há login: o usuário é quem está neste computador
+  if (MODO_OFFLINE) {
+    return (
+      <UsuarioContext value={USUARIO_LOCAL}>
+        <header className={styles.barra}>
+          <span className={styles.email}>Modo offline · relatórios salvos neste computador</span>
+        </header>
+        {children}
+      </UsuarioContext>
+    );
+  }
+
   // Sem configuração, o hook de sessão nem pode rodar — falha visível em vez de tela branca
   if (!supabaseConfigurado) {
     return (

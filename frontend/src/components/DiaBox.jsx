@@ -7,6 +7,7 @@ import styles from './DiaBox.module.css';
  *
  * `acoes` traz o estado pronto (quem gera e como fica com o formulário):
  * { gerandoPdf, gerandoEmail, ocupado, erro, onGerarPdf, onGerarEmail }
+ * Sem `onGerarEmail` (ex: modo offline), o botão de e-mail não aparece.
  */
 function DiaBox({
   dia,
@@ -80,9 +81,11 @@ function DiaBox({
         <button type="button" className={styles.btnAcao} onClick={acoes.onGerarPdf} disabled={acoes.ocupado}>
           {acoes.gerandoPdf ? 'Gerando PDF...' : '📄 PDF do dia'}
         </button>
-        <button type="button" className={styles.btnAcao} onClick={acoes.onGerarEmail} disabled={acoes.ocupado}>
-          {acoes.gerandoEmail ? 'Gerando e-mail...' : '📧 E-mail do dia'}
-        </button>
+        {acoes.onGerarEmail && (
+          <button type="button" className={styles.btnAcao} onClick={acoes.onGerarEmail} disabled={acoes.ocupado}>
+            {acoes.gerandoEmail ? 'Gerando e-mail...' : '📧 E-mail do dia'}
+          </button>
+        )}
         {acoes.erro && <p className={styles.erroAcao} role="alert">{acoes.erro}</p>}
       </div>
     </div>

@@ -84,7 +84,7 @@ function FormularioRelatorio({ relatorio, repositorio, onVoltar }) {
     gerandoEmail: geracao.estaGerando('email', data),
     erro: geracao.erroDoEscopo(data),
     onGerarPdf: () => gerarPdf(data),
-    onGerarEmail: () => gerarEmail(data),
+    onGerarEmail: FUNCIONALIDADES.emailIa ? () => gerarEmail(data) : null,
   });
 
   return (
@@ -165,14 +165,16 @@ function FormularioRelatorio({ relatorio, repositorio, onVoltar }) {
               {geracao.estaGerando('pdf', ESCOPO_PERIODO) ? 'Gerando PDF...' : '📄 PDF consolidado'}
             </button>
 
-            <button
-              type="button"
-              className={styles.btnEmail}
-              disabled={geracao.ocupado}
-              onClick={() => gerarEmail(ESCOPO_PERIODO)}
-            >
-              {geracao.estaGerando('email', ESCOPO_PERIODO) ? 'Gerando e-mail...' : '📧 E-mail do período'}
-            </button>
+            {FUNCIONALIDADES.emailIa && (
+              <button
+                type="button"
+                className={styles.btnEmail}
+                disabled={geracao.ocupado}
+                onClick={() => gerarEmail(ESCOPO_PERIODO)}
+              >
+                {geracao.estaGerando('email', ESCOPO_PERIODO) ? 'Gerando e-mail...' : '📧 E-mail do período'}
+              </button>
+            )}
 
             {FUNCIONALIDADES.timesheet && (
               <button

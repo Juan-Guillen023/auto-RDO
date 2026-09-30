@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { MODO_OFFLINE } from '../config/modo';
 
 // VITE_API_BASE aponta para um backend local durante testes (veja .env.example).
 // Sem ela, usa a produção.
@@ -16,6 +17,8 @@ export class ErroApi extends Error {
 
 // getSession() renova sozinho um token expirado, então o token enviado é sempre válido
 async function tokenDaSessao() {
+  // Offline o servidor local aceita qualquer token: só esta máquina chega nele
+  if (MODO_OFFLINE) return 'local';
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new ErroApi(401, 'Sessão expirada. Entre novamente.');
   return session.access_token;
