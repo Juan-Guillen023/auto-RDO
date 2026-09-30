@@ -1,0 +1,22 @@
+.estado {
+  max-width: 480px;
+  margin: 80px auto;
+  padding: 0 16px;
+  text-align: center;
+  font-size: 14px;
+  color: #475569;
+}
+
+.btnVoltar {
+  border: none;
+  background: none;
+  color: #1d4ed8;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btnVoltar:hover {
+  text-decoration: underline;
+}

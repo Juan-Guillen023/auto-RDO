@@ -1,12 +1,6 @@
 import styles from './AtividadeCard.module.css';
 import RichTextEditor from './RichTextEditor';
-
-export const STATUS_ATIVIDADE = [
-  { valor: 'concluido', label: '🟢 Concluído' },
-  { valor: 'em_progresso', label: '🟡 Em progresso' },
-  { valor: 'pendente', label: '⚪ Pendente / Não iniciado' },
-  { valor: 'bloqueio', label: '🔴 Bloqueio / Ação necessária' },
-];
+import { STATUS_ATIVIDADE } from '../constants/atividade';
 
 /**
  * Renderiza um item de atividade: número, título, descrição, status e galeria de fotos.
@@ -62,6 +56,19 @@ function AtividadeCard({
                 </option>
               ))}
             </select>
+          </div>
+
+          <div className={styles.campoGrupo}>
+            <label className={styles.campoLabel}>Horas Trabalhadas (para o Timesheet)</label>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              className={styles.campoInput}
+              value={atividade.horas ?? ''}
+              onChange={(e) => onAtividadeChange('horas', e.target.value)}
+              placeholder="Ex: 8"
+            />
           </div>
         </div>
 

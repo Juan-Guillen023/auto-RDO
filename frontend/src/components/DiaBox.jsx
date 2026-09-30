@@ -3,7 +3,10 @@ import styles from './DiaBox.module.css';
 
 /**
  * Renderiza o bloco de um único dia do RDO:
- * data, horários de entrada/saída e lista de atividades.
+ * data, horários de entrada/saída, lista de atividades e ações do dia.
+ *
+ * `acoes` traz o estado pronto (quem gera e como fica com o formulário):
+ * { gerandoPdf, gerandoEmail, ocupado, erro, onGerarPdf, onGerarEmail }
  */
 function DiaBox({
   dia,
@@ -14,6 +17,7 @@ function DiaBox({
   onRemoverAtividade,
   onImageUpload,
   onRemoverImagem,
+  acoes,
 }) {
   return (
     <div className={styles.diaBox}>
@@ -59,7 +63,7 @@ function DiaBox({
             onImageUpload={(files) => onImageUpload(indexDia, indexAtiv, files)}
             onRemoverImagem={(indexImagem) => onRemoverImagem(indexDia, indexAtiv, indexImagem)}
             onRemover={() => onRemoverAtividade(indexDia, indexAtiv)}
-          />
+            />
         ))}
 
         <button
@@ -69,6 +73,17 @@ function DiaBox({
         >
           + Adicionar outro item
         </button>
+      </div>
+
+      <div className={styles.acoesDia}>
+        <span className={styles.acoesLabel}>Relatório deste dia:</span>
+        <button type="button" className={styles.btnAcao} onClick={acoes.onGerarPdf} disabled={acoes.ocupado}>
+          {acoes.gerandoPdf ? 'Gerando PDF...' : '📄 PDF do dia'}
+        </button>
+        <button type="button" className={styles.btnAcao} onClick={acoes.onGerarEmail} disabled={acoes.ocupado}>
+          {acoes.gerandoEmail ? 'Gerando e-mail...' : '📧 E-mail do dia'}
+        </button>
+        {acoes.erro && <p className={styles.erroAcao} role="alert">{acoes.erro}</p>}
       </div>
     </div>
   );

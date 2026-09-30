@@ -14,3 +14,6 @@ build/
 
 # Configuracoes locais do Claude Code (especificas da maquina)
 .claude/settings.local.json
+
+# Relatórios de teste gerados pela pipeline (Jenkins)
+test-results/

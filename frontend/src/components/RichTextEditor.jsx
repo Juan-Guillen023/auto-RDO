@@ -1,4 +1,5 @@
 import { useRef, useEffect, useCallback } from 'react';
+import { sanitizarHtml } from '../utils/sanitizarHtml';
 import styles from './RichTextEditor.module.css';
 
 const TAMANHOS = [8, 10, 12, 14, 18, 24];
@@ -28,16 +29,19 @@ function RichTextEditor({ value, onChange, placeholder }) {
   const rangeSalvo = useRef(null);
 
   // Sincroniza conteúdo vindo de fora (restaurar rascunho, limpar formulário)
-  // sem sobrescrever o que o usuário está digitando.
+  // sem sobrescrever o que o usuário está digitando. O valor pode ter vindo
+  // do banco sem passar por este editor, então é sanitizado antes de virar DOM.
   useEffect(() => {
     const el = editorRef.current;
-    if (el && !focado.current && el.innerHTML !== (value || '')) {
-      el.innerHTML = value || '';
+    const seguro = sanitizarHtml(value);
+    if (el && !focado.current && el.innerHTML !== seguro) {
+      el.innerHTML = seguro;
     }
   }, [value]);
 
+  // Sanitiza também na saída: o que é salvo já vai limpo para o banco e o PDF
   const emitirChange = useCallback(() => {
-    onChange(editorRef.current.innerHTML);
+    onChange(sanitizarHtml(editorRef.current.innerHTML));
   }, [onChange]);
 
   const aplicarComando = (comando) => {

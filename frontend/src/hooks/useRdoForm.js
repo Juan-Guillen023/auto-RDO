@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { mascaraData, mascaraHora } from '../utils/mascaras';
 import { atualizarDia, atualizarAtividade } from '../utils/diasUtils';
-import { useDateRange } from './useDateRange';
+import { gerarIntervalo } from '../utils/intervaloDias';
+import { comprimirImagem } from '../utils/imagens';
+import { novaAtividade } from '../constants/atividade';
 
 
 const CAMPOS_INICIAIS = {
@@ -12,25 +14,37 @@ const CAMPOS_INICIAIS = {
   tecnico: '',
   servico: '',
   escopo: '',
+  localizacao: '',
   dataInicio: '',
   dataFim: '',
 };
 
-export function useRdoForm() {
-  const [campos, setCampos] = useState(CAMPOS_INICIAIS);
-  const [diasDados, setDiasDados] = useState([]);
+/**
+ * Estado e ações do formulário de um relatório.
+ * @param {{ campos?: object, diasDados?: object[] }} [inicial] - relatório aberto (ausente = novo)
+ */
+export function useRdoForm(inicial) {
+  // Mescla com os padrões: relatórios salvos antes de um campo novo existir continuam válidos
+  const [campos, setCampos] = useState(() => ({ ...CAMPOS_INICIAIS, ...inicial?.campos }));
+  const [diasDados, setDiasDados] = useState(() => inicial?.diasDados ?? []);
   const [erro, setErro] = useState(null);
 
-  // Delega a geração de dias para o hook especializado (SRP)
-  useDateRange(campos.dataInicio, campos.dataFim, diasDados, {
-    onDiasGerados: (dias) => { setDiasDados(dias); setErro(null); },
-    onErro: (msg) => setErro(msg),
-  });
-
   const handleCampoChange = (nome, valor) => {
-    const valorFormatado =
-      nome === 'dataInicio' || nome === 'dataFim' ? mascaraData(valor) : valor;
-    setCampos((prev) => ({ ...prev, [nome]: valorFormatado }));
+    const ehData = nome === 'dataInicio' || nome === 'dataFim';
+    const novosCampos = { ...campos, [nome]: ehData ? mascaraData(valor) : valor };
+    setCampos(novosCampos);
+
+    // Os dias são consequência direta de o usuário mudar uma data, então são
+    // recalculados aqui no evento — sem useEffect "vigiando" as datas.
+    if (ehData) aplicarIntervalo(novosCampos.dataInicio, novosCampos.dataFim);
+  };
+
+  const aplicarIntervalo = (dataInicio, dataFim) => {
+    if (dataInicio.length !== 10 || dataFim.length !== 10) return;
+
+    const { dias, erro: erroIntervalo } = gerarIntervalo(dataInicio, dataFim, diasDados);
+    setErro(erroIntervalo);
+    if (dias) setDiasDados(dias);
   };
 
   const handleDiaChange = (indexDia, campo, valor) => {
@@ -48,7 +62,7 @@ export function useRdoForm() {
     setDiasDados((prev) =>
       atualizarDia(prev, indexDia, (dia) => ({
         ...dia,
-        atividades: [...dia.atividades, { titulo: '', texto: '', status: 'concluido', imagens: [] }],
+        atividades: [...dia.atividades, novaAtividade()],
       }))
     );
   };
@@ -62,25 +76,24 @@ export function useRdoForm() {
     );
   };
 
-  const handleImageUpload = (indexDia, indexAtiv, files) => {
-    Promise.all(
-      Array.from(files).map(
-        (file) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = reject;
-          })
-      )
-    ).then((base64Images) => {
+  const handleImageUpload = async (indexDia, indexAtiv, files) => {
+    // allSettled: uma foto com formato não suportado não impede as outras de entrarem
+    const resultados = await Promise.allSettled(Array.from(files).map((file) => comprimirImagem(file)));
+    const imagens = resultados.filter((r) => r.status === 'fulfilled').map((r) => r.value);
+    const falhas = resultados.length - imagens.length;
+
+    if (imagens.length > 0) {
       setDiasDados((prev) =>
         atualizarAtividade(prev, indexDia, indexAtiv, (ativ) => ({
           ...ativ,
-          imagens: [...ativ.imagens, ...base64Images],
+          imagens: [...ativ.imagens, ...imagens],
         }))
       );
-    });
+    }
+
+    if (falhas > 0) {
+      setErro(`${falhas} imagem(ns) não puderam ser carregadas. Use JPG, PNG ou WebP.`);
+    }
   };
 
   const removerImagem = (indexDia, indexAtiv, indexImagem) => {
@@ -90,19 +103,6 @@ export function useRdoForm() {
         imagens: ativ.imagens.filter((_, k) => k !== indexImagem),
       }))
     );
-  };
-
-  const restaurarRascunho = (draft) => {
-    if (!draft?.campos || !draft?.diasDados) return;
-    setCampos(draft.campos);
-    setDiasDados(draft.diasDados);
-    setErro(null);
-  };
-
-  const limparFormulario = () => {
-    setCampos(CAMPOS_INICIAIS);
-    setDiasDados([]);
-    setErro(null);
   };
 
   return {
@@ -116,7 +116,5 @@ export function useRdoForm() {
     removerAtividade,
     handleImageUpload,
     removerImagem,
-    restaurarRascunho,
-    limparFormulario,
   };
 }

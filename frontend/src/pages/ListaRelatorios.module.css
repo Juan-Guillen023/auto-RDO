@@ -1,0 +1,249 @@
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.titulo {
+  margin: 0 0 6px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.subtitulo {
+  margin: 0;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.btnNovo {
+  padding: 11px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #1d4ed8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btnNovo:hover {
+  background: #1e40af;
+}
+
+.erro {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.btnLink {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.vazio {
+  padding: 40px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.item:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+/* A área clicável ocupa o espaço todo; status e excluir ficam à direita */
+.itemPrincipal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.itemTitulo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.itemInfo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #334155;
+}
+
+.itemDetalhe {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.status {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.em_andamento {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.finalizado {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.btnExcluir {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.btnExcluir:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.btnExcluir:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.filtros {
+  display: inline-flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border-radius: 8px;
+  background: #e2e8f0;
+}
+
+.filtro,
+.filtroAtivo {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.filtro {
+  background: transparent;
+  color: #475569;
+}
+
+.filtroAtivo {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1);
+}
+
+.seloOutro {
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.buscaEmail {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.buscaRotulo {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.buscaCampo {
+  cursor: pointer;
+  width: 100%;
+  max-width: 360px;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.buscaCampo:focus {
+  outline: none;
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.15);
+}

@@ -76,3 +76,53 @@
 .btnAddAtividade:hover {
   background: #cbd5e1;
 }
+
+.acoesDia {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #cbd5e1;
+}
+
+.acoesLabel {
+  margin-right: auto;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.btnAcao {
+  padding: 7px 14px;
+  background: #ffffff;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btnAcao:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.btnAcao:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.erroAcao {
+  flex-basis: 100%;
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 13px;
+}

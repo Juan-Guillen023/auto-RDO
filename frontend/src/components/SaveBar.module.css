@@ -1,31 +1,14 @@
 .savebar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   padding: 10px 14px;
   margin-bottom: 20px;
   transition: background 0.2s, border-color 0.2s;
-}
-
-.savebar.warning {
-  background: #fffbeb;
-  border-color: #fcd34d;
-}
-
-.savebar.critical {
-  background: #fef2f2;
-  border-color: #fca5a5;
-}
-
-.esquerda {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 .btnSalvar {
@@ -41,28 +24,28 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
-.btnSalvar:hover {
+.btnSalvar:hover:not(:disabled) {
   background: #f1f5f9;
   border-color: #94a3b8;
 }
 
-.btnSalvar:active {
-  background: #e2e8f0;
+.btnSalvar:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
-.timestamp {
-  font-size: 12px;
-  color: #22c55e;
-  font-weight: 600;
-}
-
-.alerta {
-  margin: 0;
+.status {
   font-size: 12px;
   font-weight: 600;
-  color: #92400e;
 }
 
-.savebar.critical .alerta {
-  color: #991b1b;
+.salvo .status    { color: #16a34a; }
+.pendente .status { color: #64748b; }
+.salvando .status { color: #1d4ed8; }
+
+.erro {
+  background: #fef2f2;
+  border-color: #fca5a5;
 }
+
+.erro .status { color: #991b1b; }

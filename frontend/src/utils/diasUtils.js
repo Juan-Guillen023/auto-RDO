@@ -28,6 +28,23 @@ export function validarAtividades(dias) {
 }
 
 /**
+ * Valida se há ao menos uma atividade com título e horas trabalhadas
+ * preenchidos, necessários para montar as linhas do Timesheet.
+ * @param {object[]} dias
+ * @returns {string | null} mensagem de erro, ou null se estiver tudo ok
+ */
+export function validarAtividadesTimesheet(dias) {
+  const temAtividadeValida = dias.some((dia) =>
+    dia.atividades.some((ativ) => ativ.titulo?.trim() && Number(ativ.horas) > 0)
+  );
+
+  if (!temAtividadeValida) {
+    return 'Preencha o título e as horas trabalhadas de ao menos uma atividade.';
+  }
+  return null;
+}
+
+/**
  * Atualiza um dia pelo índice de forma imutável.
  * @param {object[]} dias
  * @param {number} indexDia

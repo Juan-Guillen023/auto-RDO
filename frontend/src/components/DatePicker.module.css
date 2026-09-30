@@ -1,0 +1,182 @@
+.container {
+  position: relative; /* referência para posicionar o pop-up logo abaixo */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Input + botão de ícone lado a lado, parecendo um único campo */
+.campo {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.campo:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.campo input {
+  flex: 1;
+  min-width: 0;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  outline: none;
+  cursor: pointer;
+}
+
+.btnIcone {
+  display: flex;
+  padding: 8px 10px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.btnIcone:hover {
+  color: #1d4ed8;
+}
+
+/* Pop-up do calendário */
+.popup {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  width: 300px;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.15), 0 1px 3px rgba(15, 23, 42, 0.1);
+  animation: aparecer 0.12s ease-out;
+}
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mesAno {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.navegacao {
+  display: flex;
+  gap: 4px;
+}
+
+.navegacao button {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.navegacao button:hover {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 10px 12px 4px;
+}
+
+.diaSemana {
+  padding: 6px 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.dia {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 13px;
+  font-family: inherit;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.dia:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.foraDoMes {
+  color: #94a3b8;
+}
+
+.hoje {
+  box-shadow: inset 0 0 0 1px #1d4ed8;
+}
+
+.selecionado,
+.selecionado:hover:not(:disabled) {
+  background: #1d6fc4;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.dia:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.btnHoje {
+  display: block;
+  margin: 4px 12px 12px auto;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #1d4ed8;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btnHoje:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.btnHoje:disabled {
+  color: #cbd5e1;
+  cursor: not-allowed;
+}

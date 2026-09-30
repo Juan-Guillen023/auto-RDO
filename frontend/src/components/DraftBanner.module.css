@@ -82,3 +82,8 @@
   background: #f1f5f9;
   color: #475569;
 }
+
+.acoes button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
