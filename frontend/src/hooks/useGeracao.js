@@ -2,6 +2,22 @@ import { useState } from 'react';
 import { ErroApi } from '../services/apiClient';
 
 /**
+ * 4xx explica o que o usuário pode fazer (limite atingido, sessão expirada...)
+ * e 503 é uma indisponibilidade temporária que o backend descreve. Nos dois
+ * casos a mensagem do servidor ajuda mais que a genérica. Um 500 ou falha de
+ * rede fica com a genérica: não há nada útil a mostrar.
+ *
+ * @param {unknown} err
+ * @param {string} mensagemGenerica
+ * @returns {string}
+ */
+export function mensagemParaUsuario(err, mensagemGenerica) {
+  if (!(err instanceof ErroApi)) return mensagemGenerica;
+  const mensagemUtil = (err.status >= 400 && err.status < 500) || err.status === 503;
+  return mensagemUtil ? err.message : mensagemGenerica;
+}
+
+/**
  * Executa qualquer estratégia de geração (PDF, e-mail, Timesheet) em qualquer
  * escopo (período ou dia), cuidando do "gerando..." e da mensagem de erro.
  *
@@ -35,10 +51,7 @@ export function useGeracao(geradores) {
       return await gerador.executar(payload);
     } catch (err) {
       console.error(`Erro ao gerar ${tipo}:`, err);
-      // 4xx explica o que o usuário pode fazer (limite atingido, sessão
-      // expirada...); falha de servidor ou rede fica com a mensagem genérica
-      const ehErroDoUsuario = err instanceof ErroApi && err.status >= 400 && err.status < 500;
-      setErro({ escopo, mensagem: ehErroDoUsuario ? err.message : gerador.mensagemErro });
+      setErro({ escopo, mensagem: mensagemParaUsuario(err, gerador.mensagemErro) });
       return null;
     } finally {
       setEmAndamento(null);
