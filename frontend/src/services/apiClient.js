@@ -25,6 +25,19 @@ async function tokenDaSessao() {
 }
 
 /**
+ * O plano gratuito do Render desliga o servidor após ~15 min ocioso e leva
+ * ~1 min para religar. Um GET na abertura do app faz esse tempo correr
+ * enquanto o usuário faz login e preenche o formulário, e não no clique em
+ * "Gerar PDF". Usa a rota pública "/", fora de /api, que exigiria token.
+ * Fire-and-forget: se falhar, a requisição real acorda o servidor do mesmo jeito.
+ */
+export function acordarServidor() {
+  // Offline o servidor é local e já está de pé
+  if (MODO_OFFLINE) return;
+  fetch(new URL(API_BASE).origin, { cache: 'no-store' }).catch(() => {});
+}
+
+/**
  * POST autenticado para a API. Único ponto do app que sabe a URL do backend
  * e como se autenticar nele.
  * @param {string} rota - ex: '/gerar-rdo'
