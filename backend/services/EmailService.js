@@ -2,11 +2,21 @@ const fs = require('fs');
 const path = require('path');
 const { GoogleGenAI } = require('@google/genai');
 const { htmlParaTextoPlano, htmlEstaVazio } = require('../utils/richText');
+const { gerarComFallback } = require('./ia/gerarComFallback');
 
 const FORMAT_RULES = fs.readFileSync(
   path.join(__dirname, '../prompts/EmailDiarioPrompt.txt'),
   'utf-8'
 );
+
+// Do preferido ao reserva. O "-latest" acompanha a versão atual: modelos com
+// versão fixa (ex: gemini-2.5-flash) são desligados pelo Google com o tempo.
+const MODELOS = ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+
+// Sem retry no SDK: ele respeita o "retry-after: 30" do Google e repete o
+// MESMO modelo sobrecarregado, deixando o usuário ~1 min esperando. O modelo
+// reserva já é a nova tentativa, e responde em segundos.
+const OPCOES_REQUISICAO = { maxRetries: 0, timeout: 30_000 };
 
 const STATUS_LABEL = {
   concluido: 'CONCLUÍDO',
@@ -82,8 +92,7 @@ async function gerarEmailRdo(dadosRDO) {
   const client = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const resumoRdo = montarResumoRdo(dadosRDO);
 
-  const interaction = await client.interactions.create({
-    model: 'gemini-flash-latest',
+  const pedido = {
     system_instruction:
       'Você gera emails executivos diários de progresso de obra/serviço a partir de dados de um RDO. ' +
       'Siga ESTRITAMENTE as regras de formatação abaixo, sem se desviar delas.\n\n' +
@@ -94,7 +103,13 @@ async function gerarEmailRdo(dadosRDO) {
       mime_type: 'application/json',
       schema: OUTPUT_SCHEMA,
     },
-  });
+  };
+
+  const interaction = await gerarComFallback(
+    MODELOS,
+    (model) => client.interactions.create({ ...pedido, model }, OPCOES_REQUISICAO),
+    { aoFalhar: (modelo, err) => console.warn(`Gemini ${modelo} indisponível (${err.status ?? err.name}); tentando o próximo.`) }
+  );
 
   const text = interaction.output_text;
   if (!text) {

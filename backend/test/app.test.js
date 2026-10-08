@@ -132,3 +132,26 @@ describe('limite de e-mails', () => {
     assert.equal((await post('/api/gerar-email', payloadMinimo)).status, 429);
   });
 });
+
+describe('IA indisponível', () => {
+  test('todos os modelos sobrecarregados → 503 com mensagem para o usuário', async () => {
+    const { IaIndisponivelError } = require('../services/ia/gerarComFallback');
+    const app = criarApp({
+      verificarToken: verificarTokenFalso,
+      origensPermitidas: [ORIGEM_FRONTEND],
+      gerarEmail: async () => { throw new IaIndisponivelError([new Error('503')]); },
+    });
+    const outro = await new Promise((resolve) => { const s = app.listen(0, () => resolve(s)); });
+    try {
+      const res = await fetch(`http://127.0.0.1:${outro.address().port}/api/gerar-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${TOKEN_VALIDO}` },
+        body: JSON.stringify(payloadMinimo),
+      });
+      assert.equal(res.status, 503);
+      assert.match((await res.json()).error, /sobrecarregada/);
+    } finally {
+      outro.close();
+    }
+  });
+});

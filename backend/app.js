@@ -7,6 +7,7 @@ const { resolverDocumento } = require('./documentos/registro');
 const { gerarPdf, cabecalhoDownload } = require('./documentos/gerarPdf');
 const { validarPayload } = require('./documentos/validarPayload');
 const { gerarEmailRdo } = require('./services/EmailService');
+const { IaIndisponivelError } = require('./services/ia/gerarComFallback');
 
 const QUINZE_MINUTOS = 15 * 60 * 1000;
 
@@ -58,6 +59,12 @@ function criarApp({ verificarToken, origensPermitidas, gerarEmail = gerarEmailRd
     try {
       res.json(await gerarEmail(req.body));
     } catch (err) {
+      // Indisponibilidade do Gemini não é bug nosso: 503 com mensagem que o
+      // frontend mostra, em vez do genérico "Verifique o servidor"
+      if (err instanceof IaIndisponivelError) {
+        console.warn('Gemini indisponível em todos os modelos:', err.causas.map((c) => c.message).join(' | '));
+        return res.status(503).json({ error: 'A IA está sobrecarregada no momento. Tente novamente em alguns minutos.' });
+      }
       console.error('Erro ao gerar email:', err);
       res.status(500).json({ error: 'Erro interno ao gerar o email.' });
     }
