@@ -20,7 +20,8 @@ function DiaBox({
   acoes,
 }) {
   return (
-    <div className={styles.diaBox}>
+    // data-escopo delimita os campos validados no "PDF do dia" (ver validarCamposDoEscopo)
+    <div className={styles.diaBox} data-escopo={dia.data}>
       <h4 className={styles.titulo}>📅 Dia: {dia.data}</h4>
 
       {/* Horários */}

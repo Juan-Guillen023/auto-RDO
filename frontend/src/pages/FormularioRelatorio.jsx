@@ -8,7 +8,7 @@ import { useRdoForm } from '../hooks/useRdoForm';
 import { useRelatorioPersistence } from '../hooks/useRelatorioPersistence';
 import { useGeracao } from '../hooks/useGeracao';
 import { GERADORES } from '../services/geradores';
-import { ESCOPO_PERIODO, recortarPayload } from '../utils/escopoRelatorio';
+import { ESCOPO_PERIODO, recortarPayload, validarCamposDoEscopo } from '../utils/escopoRelatorio';
 import { FUNCIONALIDADES } from '../constants/funcionalidades';
 import styles from './FormularioRelatorio.module.css';
 
@@ -62,10 +62,10 @@ function FormularioRelatorio({ relatorio, repositorio, onVoltar }) {
   const gerar = (tipo, escopo) =>
     geracao.executar(tipo, escopo, recortarPayload(campos, diasDados, escopo));
 
-  // PDF exige os campos obrigatórios; reportValidity() mostra os balões nativos
-  // do navegador, igual ao submit do formulário
+  // PDF exige os campos obrigatórios do escopo; os balões nativos do navegador
+  // aparecem igual ao submit do formulário
   const gerarPdf = (escopo) => {
-    if (formRef.current.reportValidity()) gerar('pdf', escopo);
+    if (validarCamposDoEscopo(formRef.current, escopo)) gerar('pdf', escopo);
   };
 
   const gerarEmail = async (escopo) => {

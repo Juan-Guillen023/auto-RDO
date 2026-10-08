@@ -28,3 +28,24 @@ export function recortarPayload(campos, diasDados, escopo) {
     dias: diasDados.filter((dia) => dia.data === escopo),
   };
 }
+
+/**
+ * Equivalente a `form.reportValidity()`, mas restrito ao escopo: no PDF de um
+ * dia, os campos obrigatórios dos OUTROS dias não podem bloquear a geração.
+ *
+ * Cada bloco de dia marca seu container com `data-escopo="<data>"`. Campos
+ * fora de qualquer bloco (cliente, projeto...) são comuns a todos os escopos.
+ *
+ * @param {HTMLFormElement} form
+ * @param {Escopo} escopo
+ * @returns {boolean} true se todos os campos do escopo forem válidos
+ */
+export function validarCamposDoEscopo(form, escopo) {
+  const camposDoEscopo = Array.from(form.elements).filter((campo) => {
+    const dono = campo.closest('[data-escopo]')?.dataset.escopo;
+    return dono === undefined || escopo === ESCOPO_PERIODO || dono === escopo;
+  });
+
+  // every() para no primeiro inválido: o navegador mostra um balão por vez
+  return camposDoEscopo.every((campo) => campo.reportValidity());
+}
