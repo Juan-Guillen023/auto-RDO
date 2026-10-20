@@ -12,9 +12,21 @@ export const STATUS_ATIVIDADE = [
 ];
 
 /**
+ * Coluna do Timesheet em que as horas da atividade entram. Os valores
+ * precisam bater com TIPOS_HORA do backend (backend/timesheet/formatacao.js).
+ */
+export const TIPOS_HORA = [
+  { valor: 'travelling', label: 'Travelling' },
+  { valor: 'standby', label: 'Quarantine / Stand By' },
+  { valor: 'working', label: 'Working Hours' },
+  { valor: 'overtime', label: 'Overtime' },
+  { valor: 'holiday', label: 'Public Holiday' },
+];
+
+/**
  * Cria uma atividade em branco. É uma função (e não um objeto constante) para
  * que cada atividade receba seu próprio array `imagens`, sem compartilhar referência.
- * @returns {{ titulo: string, texto: string, status: string, imagens: string[], horas: string }}
+ * @returns {{ titulo: string, texto: string, status: string, imagens: string[], horas: string, tipoHora: string }}
  */
 export const novaAtividade = () => ({
   titulo: '',
@@ -22,4 +34,5 @@ export const novaAtividade = () => ({
   status: 'concluido',
   imagens: [],
   horas: '',
+  tipoHora: 'working',
 });

@@ -1,263 +1,228 @@
+const {
+  TIPOS_HORA, formatarMesAno, formatarHoras, formatarProjeto, montarLinhas, somarPorTipo,
+} = require('../formatacao');
+
 const MARGIN = 50;
 const PAGE_WIDTH = 495;
-const RIGHT_EDGE = MARGIN + PAGE_WIDTH;
-const BOTTOM_EDGE = 750;
+const TOP = 40;
+const BOTTOM_EDGE = 800;
 
-const MESES_PT = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const PRETO = '#000000';
+const VERMELHO = '#FF0000';
+const CINZA = '#D9D9D9';
 
-// Larguras das colunas da tabela de atividades, somando PAGE_WIDTH (495).
-const COLS = {
-  data: 50,
-  descricao: 150,
-  travelling: 50,
-  standby: 55,
-  working: 50,
-  overtime: 45,
-  holiday: 50,
-  total: 45,
-};
+// Medidas tiradas do modelo do cliente, escaladas para PAGE_WIDTH.
+const ALTURA = { titulo: 35, cabecalho: 13, linha: 15.5, espaco: 16, assinatura: 31, rodape: 13 };
+const COLS_INFO = [96, 205, 78, 116];
+const COLS_TABELA = [48, 214, 40, 38, 39, 38, 39, 39];
+const COLS_ASSINATURA = [96, 119, 58, 63, 120, 39];
 
-/**
- * Extrai "mês/ano" (ex: "jul/2026") a partir de uma data no formato DD/MM/AAAA.
- * Usa a data de início do período, mesmo que o atendimento avance para o mês seguinte.
- * @param {string} dataBR
- * @returns {string}
- */
-function getMesAnoAbreviado(dataBR) {
-  if (!dataBR || dataBR.length !== 10) return '';
-  const [, mesStr, anoStr] = dataBR.split('/');
-  const mes = MESES_PT[parseInt(mesStr, 10) - 1] || '';
-  return `${mes}/${anoStr}`;
-}
+// O modelo sempre mostra a tabela com esse número de linhas, mesmo vazias.
+const LINHAS_MINIMAS = 23;
+
+// Tudo o que vem depois das atividades precisa caber na última página.
+const RESERVA_FINAL = ALTURA.linha + ALTURA.espaco + ALTURA.assinatura + ALTURA.rodape;
+
+const ESTILO_ROTULO = { alinhar: 'left' };
+const ESTILO_VALOR = { negrito: true };
+const ESTILO_DESTAQUE = { negrito: true, cor: VERMELHO };
 
 /**
- * Renderiza o Timesheet no formato de controle de horas (modelo cliente),
+ * Renderiza o Timesheet no modelo de controle de horas do cliente,
  * a partir dos mesmos dias/atividades preenchidos no RDO.
+ *
+ * Sem estado entre execuções: a mesma instância atende todas as requisições.
  */
 class TimesheetStrategy {
   async execute(doc, dados) {
-    doc.y = 40;
+    doc.y = TOP;
     this._drawTitulo(doc);
     this._drawInfoGrid(doc, dados);
-    this._drawTabela(doc, dados);
-    this._drawAssinaturas(doc, dados);
+    this._drawTabela(doc, montarLinhas(dados.dias));
+    this._drawFaixaVazia(doc, ALTURA.espaco);
+    this._drawAssinaturas(doc);
+    this._drawFaixaVazia(doc, ALTURA.rodape);
+    this._fecharMoldura(doc);
     return doc;
   }
 
   _drawTitulo(doc) {
-    const y = doc.y;
-    doc.rect(MARGIN, y, PAGE_WIDTH, 30).stroke();
-    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000')
-      .text('TIME SHEET', MARGIN, y + 9, { width: PAGE_WIDTH, align: 'center' });
-    doc.y = y + 30;
+    this._celula(doc, 'TIME SHEET', MARGIN, doc.y, PAGE_WIDTH, ALTURA.titulo, { negrito: true, tamanho: 9.5 });
+    doc.y += ALTURA.titulo;
   }
 
   _drawInfoGrid(doc, dados) {
-    const labelCol1Width = 120;
-    const valueCol1Width = 195;
-    const labelCol2Width = 85;
-    const valueCol2Width = 95;
-    const rowHeightMinima = 22;
-
-    const xLabel1 = MARGIN;
-    const xValue1 = xLabel1 + labelCol1Width;
-    const xLabel2 = xValue1 + valueCol1Width;
-    const xValue2 = xLabel2 + labelCol2Width;
-
-    const linhas = [
-      ['Service Provided By:', `Emerson Automation Solutions - ${dados.tecnico || ''}`, 'Month / Year:', getMesAnoAbreviado(dados.dataInicio)],
-      ['Designation:', 'Service Engineer', 'Country:', 'BR'],
-      ['Client Name:', dados.cliente || '', 'Site location:', dados.localizacao || ''],
-      ['Project / Cost Center:', `${dados.projeto || ''}${dados.task ? '  TASK ' + dados.task : ''}`, 'Department:', 'Commissioning'],
-      ['Contract:', 'Day Rated', 'PO no:', dados.po || ''],
+    // [texto, coluna, linha, colunas ocupadas, linhas ocupadas, estilo]
+    const celulas = [
+      ['Service Provided By:', 0, 0, 1, 1, ESTILO_ROTULO],
+      [`Emerson Automation Solutions - ${dados.tecnico || ''}`, 1, 0, 2, 1, ESTILO_DESTAQUE],
+      ['Month / Year', 3, 0, 1, 1, ESTILO_VALOR],
+      ['Designation:', 0, 1, 1, 1, ESTILO_ROTULO],
+      ['Service Engineer', 1, 1, 2, 1, ESTILO_DESTAQUE],
+      [formatarMesAno(dados.dataInicio), 3, 1, 1, 1, ESTILO_DESTAQUE],
+      ['Country :', 0, 2, 1, 1, ESTILO_ROTULO],
+      ['BR', 1, 2, 1, 1, ESTILO_VALOR],
+      ['Client Name:', 2, 2, 1, 2, {}],
+      [dados.cliente || '', 3, 2, 1, 2, { ...ESTILO_VALOR, quebrar: true }],
+      ['Site location:', 0, 3, 1, 1, ESTILO_ROTULO],
+      [dados.localizacao || '', 1, 3, 1, 1, ESTILO_VALOR],
+      ['Project / Cost Center:', 0, 4, 1, 1, ESTILO_ROTULO],
+      [formatarProjeto(dados.projeto, dados.task), 1, 4, 1, 1, { ...ESTILO_VALOR, quebrar: true }],
+      ['Department:', 2, 4, 1, 1, {}],
+      ['Commissioning', 3, 4, 1, 1, ESTILO_VALOR],
+      ['Contract:', 0, 5, 1, 1, ESTILO_ROTULO],
+      ['Day Rated', 1, 5, 1, 1, ESTILO_VALOR],
+      ['PO no:', 2, 5, 1, 1, {}],
+      [dados.po || '', 3, 5, 1, 1, ESTILO_VALOR],
     ];
 
-    // Altura de cada linha se ajusta ao conteúdo (ex: nome do técnico longo),
-    // pra texto nunca ultrapassar a borda da célula.
-    doc.font('Helvetica').fontSize(8.5);
-    const rowHeights = linhas.map(([, value1]) => {
-      const altura = doc.heightOfString(value1 || '', { width: valueCol1Width - 12 });
-      return Math.max(rowHeightMinima, altura + 14);
-    });
-
-    const startY = doc.y;
-    const totalHeight = rowHeights.reduce((soma, h) => soma + h, 0);
-
-    doc.rect(MARGIN, startY, PAGE_WIDTH, totalHeight).stroke();
-    doc.moveTo(xValue1, startY).lineTo(xValue1, startY + totalHeight).stroke();
-    doc.moveTo(xLabel2, startY).lineTo(xLabel2, startY + totalHeight).stroke();
-    doc.moveTo(xValue2, startY).lineTo(xValue2, startY + totalHeight).stroke();
-
-    let cursorY = startY;
-    linhas.forEach(([label1, value1, label2, value2], index) => {
-      const rowY = cursorY;
-      if (index > 0) {
-        doc.moveTo(MARGIN, rowY).lineTo(RIGHT_EDGE, rowY).stroke();
-      }
-
-      const textY = rowY + 7;
-      doc.font('Helvetica-Bold').fontSize(8.5).fillColor('#000000')
-        .text(label1, xLabel1 + 6, textY, { width: labelCol1Width - 10 });
-      doc.font('Helvetica')
-        .text(value1, xValue1 + 6, textY, { width: valueCol1Width - 12 });
-      doc.font('Helvetica-Bold')
-        .text(label2, xLabel2 + 6, textY, { width: labelCol2Width - 10, lineBreak: false });
-      doc.font('Helvetica')
-        .text(value2, xValue2 + 6, textY, { width: valueCol2Width - 12, lineBreak: false });
-
-      cursorY += rowHeights[index];
-    });
-
-    doc.y = startY + totalHeight + 15;
+    this._drawGrade(doc, COLS_INFO, [16, 16, 17, 17, 27, 20], celulas);
   }
 
-  _buildLinhasAtividades(dados) {
-    const linhas = [];
-    for (const dia of dados.dias || []) {
-      for (const ativ of dia.atividades || []) {
-        if (!ativ.titulo?.trim()) continue;
-        const horas = parseFloat(ativ.horas) || 0;
-        linhas.push({ data: dia.data, titulo: ativ.titulo, horas });
-      }
-    }
-    return linhas;
-  }
-
-  _drawTabela(doc, dados) {
-    const linhas = this._buildLinhasAtividades(dados);
-    const totalHoras = linhas.reduce((acc, linha) => acc + linha.horas, 0);
-
+  _drawTabela(doc, linhas) {
     this._drawCabecalhoTabela(doc);
 
     for (const linha of linhas) {
-      const rowHeight = this._medirAlturaLinha(doc, linha.titulo);
-      if (doc.y + rowHeight > BOTTOM_EDGE) {
-        doc.addPage();
-        doc.y = 40;
-        this._drawCabecalhoTabela(doc);
-      }
-      this._drawLinhaTabela(doc, [linha.data, linha.titulo, '-', '-', linha.horas || '-', '-', '-', linha.horas || '-'], rowHeight);
+      const altura = this._medirAlturaLinha(doc, linha.descricao);
+      if (doc.y + altura > BOTTOM_EDGE) this._novaPagina(doc);
+      const colunasHoras = TIPOS_HORA.map((tipo) => (tipo === linha.tipoHora ? formatarHoras(linha.horas) : '-'));
+      const total = formatarHoras(linha.horas);
+      this._drawLinhaTabela(doc, [linha.data, linha.descricao, ...colunasHoras, total], altura);
     }
 
-    if (doc.y + 18 > BOTTOM_EDGE) {
-      doc.addPage();
-      doc.y = 40;
-      this._drawCabecalhoTabela(doc);
+    // Completa com linhas vazias até o mínimo do modelo, sem empurrar o rodapé
+    // para outra página
+    const vazias = Math.max(0, LINHAS_MINIMAS - linhas.length);
+    for (let i = 0; i < vazias && doc.y + ALTURA.linha + RESERVA_FINAL <= BOTTOM_EDGE; i++) {
+      this._drawLinhaTabela(doc, [], ALTURA.linha);
     }
-    this._drawLinhaTotal(doc, totalHoras);
 
-    doc.y += 15;
-  }
-
-  _drawLinhaTotal(doc, totalHoras) {
-    const y = doc.y;
-    const rowHeight = 18;
-    const larguraRotulo = COLS.data + COLS.descricao;
-
-    doc.rect(MARGIN, y, PAGE_WIDTH, rowHeight).fillAndStroke('#e2e8f0', '#000000');
-
-    doc.font('Helvetica-Bold').fontSize(7.5).fillColor('#000000')
-      .text('GRAND TOTAL Hours', MARGIN + 5, y + 5, { width: larguraRotulo - 8, lineBreak: false });
-
-    const valoresRestantes = [0, 0, totalHoras, 0, 0, totalHoras];
-    const largurasRestantes = [COLS.travelling, COLS.standby, COLS.working, COLS.overtime, COLS.holiday, COLS.total];
-
-    let x = MARGIN + larguraRotulo;
-    valoresRestantes.forEach((valor, index) => {
-      const largura = largurasRestantes[index];
-      doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
-      doc.text(String(valor), x, y + 5, { width: largura, align: 'center', lineBreak: false });
-      x += largura;
-    });
-
-    doc.y = y + rowHeight;
+    if (doc.y + RESERVA_FINAL > BOTTOM_EDGE) this._novaPagina(doc);
+    this._drawLinhaTotal(doc, somarPorTipo(linhas));
   }
 
   _drawCabecalhoTabela(doc) {
-    const y = doc.y;
-    const rowHeight = 26;
-    const headers = [
-      ['Date', COLS.data],
-      ['Description of Work', COLS.descricao],
-      ['Travelling', COLS.travelling],
-      ['Quarantine/Stand By', COLS.standby],
-      ['Working Hours', COLS.working],
-      ['Overtime Hours', COLS.overtime],
-      ['Public Holiday', COLS.holiday],
-      ['Total', COLS.total],
-    ];
+    const titulos = ['Date', 'Description of Work', 'Travelling', 'Quarantine/Stand By',
+      'Working Hours', 'Overtime Hours', 'Public Holiday', 'Total'];
+    let x = MARGIN;
+    titulos.forEach((titulo, i) => {
+      const alinhar = i === 1 ? 'center' : 'left';
+      this._celula(doc, titulo, x, doc.y, COLS_TABELA[i], ALTURA.cabecalho, { negrito: true, tamanho: 5, alinhar, quebrar: true });
+      x += COLS_TABELA[i];
+    });
+    doc.y += ALTURA.cabecalho;
+  }
 
-    doc.rect(MARGIN, y, PAGE_WIDTH, rowHeight).fillAndStroke('#e2e8f0', '#000000');
+  /** Só a descrição (texto livre) pode quebrar linha e aumentar a altura. */
+  _medirAlturaLinha(doc, descricao) {
+    doc.font('Helvetica').fontSize(7);
+    const altura = doc.heightOfString(descricao, { width: COLS_TABELA[1] - 6 });
+    return Math.max(ALTURA.linha, altura + 6);
+  }
+
+  _drawLinhaTabela(doc, [data = '', descricao = '', ...horas], altura) {
+    const estilos = [
+      { ...ESTILO_DESTAQUE, tamanho: 6.5 },
+      { alinhar: 'left', quebrar: true },
+      ...horas.map(() => ({})),
+    ];
+    const valores = [data, descricao, ...horas];
 
     let x = MARGIN;
-    doc.font('Helvetica-Bold').fontSize(7).fillColor('#000000');
-    for (const [texto, largura] of headers) {
-      if (x !== MARGIN) doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
-      doc.text(texto, x + 3, y + 7, { width: largura - 6, align: 'center' });
+    COLS_TABELA.forEach((largura, i) => {
+      this._celula(doc, valores[i] ?? '', x, doc.y, largura, altura, estilos[i]);
       x += largura;
-    }
+    });
+    doc.y += altura;
+  }
 
-    doc.y = y + rowHeight;
+  _drawLinhaTotal(doc, totaisPorTipo) {
+    const y = doc.y;
+    const larguraRotulo = COLS_TABELA[0] + COLS_TABELA[1];
+    doc.rect(MARGIN, y, PAGE_WIDTH, ALTURA.linha).fill(CINZA);
+
+    this._celula(doc, 'GRAND TOTAL Hours', MARGIN, y, larguraRotulo, ALTURA.linha,
+      { negrito: true, tamanho: 6, alinhar: 'left' });
+
+    let x = MARGIN + larguraRotulo;
+    const total = totaisPorTipo.reduce((a, b) => a + b, 0);
+    [...totaisPorTipo, total].forEach((valor, i) => {
+      const largura = COLS_TABELA[i + 2];
+      this._celula(doc, String(valor), x, y, largura, ALTURA.linha, { negrito: true, tamanho: 9 });
+      x += largura;
+    });
+    doc.y = y + ALTURA.linha;
+  }
+
+  /** Nome e data ficam em branco: são preenchidos à mão na assinatura. */
+  _drawAssinaturas(doc) {
+    const celulas = [
+      ['Vendor Name:', 0, 0, 1, 2, { ...ESTILO_ROTULO, negrito: true }],
+      ['', 1, 0, 1, 2, {}],
+      ['Date', 2, 0, 1, 1, { ...ESTILO_ROTULO, negrito: true }],
+      ['', 2, 1, 1, 1, {}],
+      ['Customer Name:', 3, 0, 1, 2, { ...ESTILO_ROTULO, negrito: true }],
+      ['', 4, 0, 1, 2, {}],
+      ['Date', 5, 0, 1, 1, { ...ESTILO_ROTULO, negrito: true }],
+      ['', 5, 1, 1, 1, {}],
+    ];
+    this._drawGrade(doc, COLS_ASSINATURA, [13, ALTURA.assinatura - 13], celulas);
+  }
+
+  _drawFaixaVazia(doc, altura) {
+    this._celula(doc, '', MARGIN, doc.y, PAGE_WIDTH, altura);
+    doc.y += altura;
+  }
+
+  _novaPagina(doc) {
+    this._fecharMoldura(doc);
+    doc.addPage();
+    doc.y = TOP;
+    this._drawCabecalhoTabela(doc);
+  }
+
+  /** Borda externa mais grossa, como no modelo. */
+  _fecharMoldura(doc) {
+    doc.lineWidth(1.5).rect(MARGIN, TOP, PAGE_WIDTH, doc.y - TOP).stroke(PRETO);
   }
 
   /**
-   * Mede a altura necessária pra linha, considerando que a Descrição
-   * (única coluna com texto livre) pode quebrar em mais de uma linha.
+   * Desenha uma grade de células com mesclagem (colunas/linhas ocupadas),
+   * a partir de doc.y, e avança doc.y para o fim dela.
    */
-  _medirAlturaLinha(doc, titulo) {
-    doc.font('Helvetica').fontSize(7.5);
-    const altura = doc.heightOfString(titulo || '', { width: COLS.descricao - 10 });
-    return Math.max(18, altura + 8);
-  }
+  _drawGrade(doc, larguras, alturas, celulas) {
+    const inicioX = (col) => MARGIN + larguras.slice(0, col).reduce((a, b) => a + b, 0);
+    const inicioY = (lin) => doc.y + alturas.slice(0, lin).reduce((a, b) => a + b, 0);
 
-  _drawLinhaTabela(doc, valores, rowHeight = 18) {
-    const y = doc.y;
-    const larguras = Object.values(COLS);
-
-    doc.rect(MARGIN, y, PAGE_WIDTH, rowHeight).stroke();
-
-    let x = MARGIN;
-    doc.font('Helvetica').fontSize(7.5).fillColor('#000000');
-    valores.forEach((valor, index) => {
-      const largura = larguras[index];
-      if (x !== MARGIN) doc.moveTo(x, y).lineTo(x, y + rowHeight).stroke();
-
-      const isDescricao = index === 1;
-      doc.text(String(valor ?? ''), x + (isDescricao ? 5 : 0), y + 5, {
-        width: largura - (isDescricao ? 8 : 3),
-        align: isDescricao ? 'left' : 'center',
-        lineBreak: isDescricao,
-        ellipsis: !isDescricao,
-      });
-      x += largura;
-    });
-
-    doc.y = y + rowHeight;
-  }
-
-  _drawAssinaturas(doc, dados) {
-    if (doc.y + 60 > BOTTOM_EDGE) {
-      doc.addPage();
-      doc.y = 40;
+    for (const [texto, col, lin, colunas, linhas, estilo] of celulas) {
+      const x = inicioX(col);
+      const y = inicioY(lin);
+      this._celula(doc, texto, x, y, inicioX(col + colunas) - x, inicioY(lin + linhas) - y, estilo);
     }
+    doc.y = inicioY(alturas.length);
+  }
 
-    const y = doc.y;
-    const halfWidth = PAGE_WIDTH / 2;
+  /**
+   * Célula com borda e texto centralizado na vertical. O recorte (clip)
+   * garante que um valor longo nunca invada a célula vizinha.
+   * Não mexe no cursor do doc (doc.text o moveria): quem chama posiciona.
+   */
+  _celula(doc, texto, x, y, largura, altura, estilo = {}) {
+    const { negrito = false, cor = PRETO, tamanho = 7, alinhar = 'center', quebrar = false } = estilo;
 
-    doc.rect(MARGIN, y, PAGE_WIDTH, 55).stroke();
-    doc.moveTo(MARGIN + halfWidth, y).lineTo(MARGIN + halfWidth, y + 55).stroke();
-    doc.moveTo(MARGIN, y + 18).lineTo(RIGHT_EDGE, y + 18).stroke();
+    doc.lineWidth(0.5).rect(x, y, largura, altura).stroke(PRETO);
+    if (!texto) return;
 
-    doc.font('Helvetica-Bold').fontSize(8).fillColor('#000000')
-      .text('Vendor Name:', MARGIN + 6, y + 6, { lineBreak: false })
-      .text('Customer Name:', MARGIN + halfWidth + 6, y + 6, { lineBreak: false });
+    const opcoes = { width: largura - 6, align: alinhar, lineBreak: quebrar };
+    doc.font(negrito ? 'Helvetica-Bold' : 'Helvetica').fontSize(tamanho).fillColor(cor);
+    const alturaTexto = Math.min(doc.heightOfString(quebrar ? texto : 'X', opcoes), altura);
 
-    doc.font('Helvetica').fontSize(8)
-      .text(dados.tecnico || '', MARGIN + 90, y + 6, { width: halfWidth - 96, lineBreak: false })
-      .text('Date:', MARGIN + 6, y + 32, { lineBreak: false })
-      .text('Date:', MARGIN + halfWidth + 6, y + 32, { lineBreak: false });
-
-    doc.y = y + 55;
+    const cursorY = doc.y;
+    doc.save();
+    doc.rect(x, y, largura, altura).clip();
+    doc.text(texto, x + 3, y + (altura - alturaTexto) / 2, opcoes);
+    doc.restore();
+    doc.y = cursorY;
   }
 }
 
