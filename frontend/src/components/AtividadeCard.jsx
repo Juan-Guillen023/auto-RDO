@@ -1,6 +1,6 @@
 import styles from './AtividadeCard.module.css';
 import RichTextEditor from './RichTextEditor';
-import { STATUS_ATIVIDADE } from '../constants/atividade';
+import { STATUS_ATIVIDADE, TIPOS_HORA } from '../constants/atividade';
 
 /**
  * Renderiza um item de atividade: número, título, descrição, status e galeria de fotos.
@@ -69,6 +69,21 @@ function AtividadeCard({
               onChange={(e) => onAtividadeChange('horas', e.target.value)}
               placeholder="Ex: 8"
             />
+          </div>
+
+          <div className={styles.campoGrupo}>
+            <label className={styles.campoLabel}>Tipo de Hora (para o Timesheet)</label>
+            <select
+              className={styles.campoInput}
+              value={atividade.tipoHora || 'working'}
+              onChange={(e) => onAtividadeChange('tipoHora', e.target.value)}
+            >
+              {TIPOS_HORA.map((opcao) => (
+                <option key={opcao.valor} value={opcao.valor}>
+                  {opcao.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

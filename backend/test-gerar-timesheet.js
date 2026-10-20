@@ -14,24 +14,24 @@ const dadosTeste = {
   po: '4500123456',
   tecnico: 'RAFAEL CABRAL',
   localizacao: 'ITABUNA - BAHIA',
-  dataInicio: '26/07/2026',
+  dataInicio: '27/07/2026',
   dataFim: '30/07/2026',
   dias: [
     {
-      data: '26/07/26',
+      data: '26/07/2026',
       atividades: [
-        { titulo: 'Deslocamento até o site', horas: 4 },
+        { titulo: 'Deslocamento até o site', horas: 4, tipoHora: 'travelling' },
       ],
     },
     {
-      data: '27/07/26',
+      data: '27/07/2026',
       atividades: [
         { titulo: 'Elaboração do relatório referente a GC de ITABUNA - BA', horas: 8 },
-        { titulo: 'Reunião de alinhamento com o cliente', horas: 2 },
+        { titulo: 'Reunião de alinhamento com o cliente', horas: 2, tipoHora: 'overtime' },
       ],
     },
     {
-      data: '28/07/26',
+      data: '28/07/2026',
       atividades: [
         { titulo: 'Comissionamento de instrumentos de campo', horas: 8 },
       ],
